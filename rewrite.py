@@ -75,11 +75,11 @@ def praytimes():
         if city != "no city":
             timezone = float(pytz.timezone(tf.timezone_at(lng=location.longitude, lat=location.latitude)).utcoffset(
         datetime(ct.year, ct.month, ct.day, ct.hour, ct.minute, ct.second)).total_seconds() / 3600)
-            pt = Prayer(PrayerConf(location.longitude, location.latitude, timezone, school, juristic), date.today())
+            pt = Prayer(PrayerConf(location.longitude, location.latitude, timezone, int(school), int(juristic)), date.today())
         elif lat and long:
             timezone = float(pytz.timezone(tf.timezone_at(lng=long, lat=lat)).utcoffset(
                 datetime(ct.year, ct.month, ct.day, ct.hour, ct.minute, ct.second)).total_seconds() / 3600)
-            pt  = Prayer(PrayerConf(long, lat, timezone, school, juristic), date.today())
+            pt  = Prayer(PrayerConf(long, lat, timezone, int(school),int(juristic), date.today()))
 
         prayer_times = {
                 "Fajr": pt.fajr_time(),
@@ -89,7 +89,8 @@ def praytimes():
                 "Maghreb": pt.maghreb_time(),
                 "Ishaa": pt.ishaa_time(),
                 "Qiyam": pt.last_third_of_night()}
-        return f"{prayer_times}"
+        #return render_template('prayers.html', prayers=prayer_times)
+        return prayer_times
 
 
 
