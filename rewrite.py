@@ -21,36 +21,76 @@ def checkArg(argName, argType='str'):
                 return request.args.get(argName, type=str)
 
             except Exception as e:
-                return e
+                return None
         elif argType == 'int':
             try:
                 return request.args.get(argName, type=int)
             except Exception as e:
-                return e
+                return None
+        elif argType == 'flt':
+            try:
+                return request.args.get(argName, type=float)
+            except Exception as e:
+                return None
     else:
         try:
             return request.args.get(argName)
         except Exception as e:
-            return e
+            return None
 
 
-def checkCity():
-    city = checkArg('city', 'str')
-    if not city:
-        lat, long = checkArg('lat'), checkArg('long')
-        if not lat or not long:
-            return "missing args city , lat or long"
-        else:
-            return f"{lat}|{long}"
-    else:
-        return f"{city}"
+
+
 @app.route("/praytimes/today", methods=['GET', 'POST'])
 def praytimes():
     if request.method == 'POST':
         return "POST method"
     if request.method == 'GET':
-        if
-        ct = datetime.datetime.now()
+        lat = ''
+        long=''
+        city = checkArg('city', 'str')
+        if not city:
+            lat, long = checkArg('lat', 'flt'), checkArg('long', 'flt')
+            if not lat or not long:
+                return "missing args city , lat or long"
+            else:
+                city = "no city"
+
+        else:
+            city = city
+            geolocator = Nominatim(user_agent='prayer-times-rewrite')
+            location = geolocator.geocode(city)
+        juristic = checkArg('juristic', 'flt')
+        if not juristic:
+            juristic = 0 #Shafii , Maliki, Hambali
+        else:
+            juristic = juristic
+        school = checkArg('school', 'flt')
+        if not school:
+            school = 4 # https://prayertimes.date/api/docs/today
+        else:
+            school = school
+        ct = datetime.now()
+        tf = TimezoneFinder()
+        if city != "no city":
+            timezone = float(pytz.timezone(tf.timezone_at(lng=location.longitude, lat=location.latitude)).utcoffset(
+        datetime(ct.year, ct.month, ct.day, ct.hour, ct.minute, ct.second)).total_seconds() / 3600)
+            pt = Prayer(PrayerConf(location.longitude, location.latitude, timezone, school, juristic), date.today())
+        elif lat and long:
+            timezone = float(pytz.timezone(tf.timezone_at(lng=long, lat=lat)).utcoffset(
+                datetime(ct.year, ct.month, ct.day, ct.hour, ct.minute, ct.second)).total_seconds() / 3600)
+            pt  = Prayer(PrayerConf(long, lat, timezone, school, juristic), date.today())
+
+        prayer_times = {
+                "Fajr": pt.fajr_time(),
+                "Sherook": pt.sherook_time(),
+                "Dohr": pt.dohr_time(),
+                "Asr": pt.asr_time(),
+                "Maghreb": pt.maghreb_time(),
+                "Ishaa": pt.ishaa_time(),
+                "Qiyam": pt.last_third_of_night()}
+        return f"{prayer_times}"
+
 
 
 
